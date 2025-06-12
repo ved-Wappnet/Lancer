@@ -10,6 +10,8 @@ import {
 import Link from "next/link";
 import { MainNav } from "@/components/layout/main-nav";
 import { Footer } from "@/components/layout/footer";
+import Lancer from "@/public/images/lancer.jpeg"
+import LancerCollaborating from "@/public/images/lancer_collaborating.jpeg"
 
 export default function Home() {
   return (
@@ -61,7 +63,7 @@ export default function Home() {
               </div>
               <div className="relative h-[400px] w-full rounded-lg overflow-hidden shadow-2xl">
                 <Image
-                  src="https://images.pexels.com/photos/3183150/pexels-photo-3183150.jpeg"
+                  src={LancerCollaborating}
                   alt="Freelancers collaborating"
                   fill
                   style={{ objectFit: "cover" }}
@@ -153,7 +155,7 @@ export default function Home() {
               </div>
               <div className="relative h-[300px] w-full rounded-lg overflow-hidden shadow-2xl">
                 <Image
-                  src="https://images.pexels.com/photos/3182812/pexels-photo-3182812.jpeg"
+                  src={Lancer}
                   alt="Successful freelancer"
                   fill
                   style={{ objectFit: "cover" }}
