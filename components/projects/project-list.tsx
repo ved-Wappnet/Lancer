@@ -13,91 +13,60 @@ import {
 
 interface ProjectListProps {
   searchQuery: string;
-  categoryFilter: string;
-  statusFilter: "all" | "active" | "completed" | "draft";
+
+  categoryFilter: string | number;
+  statusFilter: "all" | 0 | 1 | 2 | 3;
 }
 
-// Mock project data
-const projects = [
-  {
-    id: "1",
-    title: "E-commerce Website Redesign",
-    description: "Redesign of e-commerce website with focus on UX and conversion optimization.",
-    status: "active",
-    budget: "$4,500",
-    deadline: "June 15, 2025",
-    category: "design",
-    proposalCount: 8,
-    isHiring: true,
-  },
-  {
-    id: "2",
-    title: "Mobile App Development",
-    description: "Native iOS and Android app for food delivery service.",
-    status: "active",
-    budget: "$8,000",
-    deadline: "July 30, 2025",
-    category: "development",
-    proposalCount: 12,
-    isHiring: true,
-  },
-  {
-    id: "3",
-    title: "Brand Identity Design",
-    description: "Logo, color palette, and brand guidelines for tech startup.",
-    status: "active",
-    budget: "$2,200",
-    deadline: "May 25, 2025",
-    category: "design",
-    proposalCount: 15,
-    isHiring: false,
-  },
-  {
-    id: "4",
-    title: "Content Marketing Strategy",
-    description: "Content creation and distribution strategy for Q3 and Q4.",
-    status: "draft",
-    budget: "$3,000",
-    deadline: "TBD",
-    category: "marketing",
-    proposalCount: 0,
-    isHiring: false,
-  },
-  {
-    id: "5",
-    title: "SEO Optimization",
-    description: "Technical SEO audit and implementation of recommendations.",
-    status: "completed",
-    budget: "$1,800",
-    deadline: "Completed April 10, 2025",
-    category: "marketing",
-    proposalCount: 6,
-    isHiring: false,
-  },
-  {
-    id: "6",
-    title: "Product Documentation",
-    description: "User guides and technical documentation for SaaS platform.",
-    status: "completed",
-    budget: "$2,500",
-    deadline: "Completed March 22, 2025",
-    category: "writing",
-    proposalCount: 4,
-    isHiring: false,
-  },
-];
+const statusLabels: Record<number, string> = {
+  0: "Draft",
+  1: "Active",
+  2: "Completed",
+  3: "In Review",
+};
 
-export function ProjectList({ searchQuery, categoryFilter, statusFilter }: ProjectListProps) {
-  // Filter projects based on search query, category, and status
-  const filteredProjects = projects.filter((project) => {
-    const matchesSearch = project.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-                        project.description.toLowerCase().includes(searchQuery.toLowerCase());
-    
-    const matchesCategory = categoryFilter === "all" || project.category === categoryFilter;
-    
-    const matchesStatus = statusFilter === "all" || project.status === statusFilter;
-    
-    return matchesSearch && matchesCategory && matchesStatus;
+const statusBadgeVariant: Record<number, "default" | "secondary" | "outline"> = {
+  0: "outline",
+  1: "default",
+  2: "secondary",
+  3: "outline",
+};
+
+const categoryLabels: Record<number, string> = {
+  0: "Web Design",
+  1: "Development",
+  2: "Marketing",
+  3: "Content Writing",
+  4: "Other",
+};
+
+import { useGetProjectsQuery } from "@/services/projectApi";
+
+import { useState } from "react";
+import { ProjectModal } from "./project-modal";
+import Loader from "../ui/loader";
+
+export function ProjectList({ categoryFilter, statusFilter }: ProjectListProps) {
+  // State for edit modal
+  const [editModalOpen, setEditModalOpen] = useState(false);
+  const [selectedProject, setSelectedProject] = useState<any | null>(null);
+
+  const { data: projects, isLoading, isFetching } = useGetProjectsQuery();
+
+  // Helper to safely compare status/category filters (supports string/number input)
+  const toNum = (val: string | number) => typeof val === 'number' ? val : Number(val);
+
+  if (isLoading || isFetching) {
+    return <Loader/>;
+  }
+
+  // Only filter by category and status client-side; search is now handled by backend
+  const filteredProjects = (projects || []).filter((project) => {
+    const category = typeof project.category === 'number' ? project.category : -1;
+    const status = typeof project.status === 'number' ? project.status : -1;
+    const matchesCategory = categoryFilter === "all" || category === toNum(categoryFilter);
+    const matchesStatus = statusFilter === "all" || status === toNum(statusFilter);
+    return matchesCategory && matchesStatus;
   });
 
   if (filteredProjects.length === 0) {
@@ -109,98 +78,108 @@ export function ProjectList({ searchQuery, categoryFilter, statusFilter }: Proje
     );
   }
 
+  const handleEditProject = (project: any) => {
+    setSelectedProject(project);
+    setEditModalOpen(true);
+  };
+
   return (
-    <div className="space-y-4">
-      {filteredProjects.map((project) => (
-        <div
-          key={project.id}
-          className="rounded-lg border bg-card text-card-foreground shadow-sm hover:shadow-md transition-shadow"
-        >
-          <div className="p-6">
-            <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-4">
-              <div className="space-y-1">
-                <div className="flex flex-col sm:flex-row sm:items-center gap-2">
-                  <h3 className="font-semibold text-lg">
-                    <Link
-                      href={`/projects/${project.id}`}
-                      className="hover:underline"
-                    >
-                      {project.title}
-                    </Link>
-                  </h3>
-                  <div className="flex flex-wrap gap-2">
-                    <Badge
-                      variant={
-                        project.status === "active"
-                          ? "default"
-                          : project.status === "completed"
-                            ? "secondary"
-                            : "outline"
-                      }
-                    >
-                      {project.status === "active"
-                        ? "Active"
-                        : project.status === "completed"
-                          ? "Completed"
-                          : "Draft"}
+    <>
+      <div className="space-y-4">
+        {filteredProjects.map((project) => (
+          <div
+            key={project.id}
+            className="rounded-lg border bg-card text-card-foreground shadow-sm hover:shadow-md transition-shadow"
+          >
+            <div className="p-6">
+              <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-4">
+                <div className="space-y-1">
+                  <div className="flex flex-col sm:flex-row sm:items-center gap-2">
+                    <h3 className="font-semibold text-lg">
+                      <Link
+                        href={`/dashboard/projects/${project.id}`}
+                        className="hover:underline"
+                      >
+                        {project.title}
+                      </Link>
+                    </h3>
+                    {/* Status Badge */}
+                    <Badge variant={statusBadgeVariant[project.status] || "outline"}>
+                      {statusLabels[project.status] || "Unknown"}
                     </Badge>
-                    {project.isHiring && (
-                      <Badge variant="outline" className="bg-green-500/10 text-green-500 hover:bg-green-500/20 border-green-500/20">
-                        Hiring
-                      </Badge>
-                    )}
+                    {/* Category Badge */}
+                    <Badge variant="secondary">
+                      {categoryLabels[project.category] || "Unknown"}
+                    </Badge>
                   </div>
-                </div>
-                <p className="text-sm text-muted-foreground">
-                  {project.description}
-                </p>
+                  <p className="text-sm text-muted-foreground">
+                    {project.description}
+                  </p>
 
-                <div className="flex flex-wrap gap-4 mt-4 text-sm">
-                  <div className="flex items-center text-muted-foreground">
-                    <DollarSign className="mr-1 h-4 w-4" />
-                    {project.budget}
-                  </div>
-                  <div className="flex items-center text-muted-foreground">
-                    <Calendar className="mr-1 h-4 w-4" />
-                    {project.deadline}
-                  </div>
-                  {project.status !== "draft" && (
+                  <div className="flex flex-wrap gap-4 mt-4 text-sm">
                     <div className="flex items-center text-muted-foreground">
-                      <MessageSquare className="mr-1 h-4 w-4" />
-                      {project.proposalCount} proposals
+                      <DollarSign className="mr-1 h-4 w-4" />
+                      {project.budget}
                     </div>
-                  )}
-                </div>
-              </div>
+                    <div className="flex items-center text-muted-foreground">
+                      <Calendar className="mr-1 h-4 w-4" />
+                      {project.deadline}
+                    </div>
+                  </div>
 
-              <div className="flex flex-row sm:flex-col gap-2 sm:items-end">
-                <Link href={`/projects/${project.id}`}>
-                  <Button size="sm">View Details</Button>
-                </Link>
-                <DropdownMenu>
-                  <DropdownMenuTrigger asChild>
-                    <Button variant="ghost" size="icon" className="h-8 w-8">
-                      <MoreHorizontal className="h-4 w-4" />
-                      <span className="sr-only">More options</span>
-                    </Button>
-                  </DropdownMenuTrigger>
-                  <DropdownMenuContent align="end">
-                    <DropdownMenuItem>Edit Project</DropdownMenuItem>
-                    <DropdownMenuItem>View Proposals</DropdownMenuItem>
-                    <DropdownMenuItem>Share Project</DropdownMenuItem>
-                    {project.status === "draft" && (
-                      <DropdownMenuItem>Publish Project</DropdownMenuItem>
+                  {/* Skills Required */}
+                  <div className="flex flex-wrap gap-2 mt-2">
+                    <span className="font-medium text-muted-foreground">Skills Required:</span>
+                    {Array.isArray(project.skillsRequired) && project.skillsRequired.length > 0 ? (
+                      project.skillsRequired.map((skill: string, idx: number) => (
+                        <span key={idx} className="rounded-full bg-primary/10 text-primary px-3 py-1 text-xs">
+                          {skill}
+                        </span>
+                      ))
+                    ) : (
+                      <span className="text-xs text-muted-foreground">None specified</span>
                     )}
-                    {project.status === "active" && (
-                      <DropdownMenuItem>Mark as Completed</DropdownMenuItem>
-                    )}
-                  </DropdownMenuContent>
-                </DropdownMenu>
+                  </div>
+                </div>
+
+                <div className="flex flex-row sm:flex-col gap-2 sm:items-end">
+                  <Link href={`/dashboard/projects/${project.id}`}>
+                    <Button size="sm">View Details</Button>
+                  </Link>
+                  <DropdownMenu>
+                    <DropdownMenuTrigger asChild>
+                      <Button variant="ghost" size="icon" className="h-8 w-8">
+                        <MoreHorizontal className="h-4 w-4" />
+                        <span className="sr-only">More options</span>
+                      </Button>
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent align="end">
+                      <DropdownMenuItem onClick={() => handleEditProject(project)}>
+                        Edit Project
+                      </DropdownMenuItem>
+                      <DropdownMenuItem>View Proposals</DropdownMenuItem>
+                      <DropdownMenuItem>Share Project</DropdownMenuItem>
+                      {project.status === 0 && (
+                        <DropdownMenuItem>Publish Project</DropdownMenuItem>
+                      )}
+                      {project.status === 1 && (
+                        <DropdownMenuItem>Mark as Completed</DropdownMenuItem>
+                      )}
+                    </DropdownMenuContent>
+                  </DropdownMenu>
+                </div>
               </div>
             </div>
           </div>
-        </div>
-      ))}
-    </div>
+        ))}
+      </div>
+      {/* Edit Project Modal */}
+      <ProjectModal
+        open={editModalOpen}
+        setOpen={setEditModalOpen}
+        mode="edit"
+        initialData={selectedProject}
+      />
+    </>
   );
 }

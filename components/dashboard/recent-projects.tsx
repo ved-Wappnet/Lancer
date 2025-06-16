@@ -101,6 +101,18 @@ const freelancerProjects = [
   },
 ];
 
+// Status mapping for extensibility
+const statusLabels: Record<string, string> = {
+  "in-progress": "In Progress",
+  "review": "In Review",
+  "completed": "Completed",
+};
+const statusBadgeVariant: Record<string, "default" | "secondary" | "outline"> = {
+  "in-progress": "default",
+  "review": "secondary",
+  "completed": "outline",
+};
+
 export function RecentProjects({ userRole }: RecentProjectsProps) {
   const projects = userRole === "client" ? clientProjects : freelancerProjects;
   const entityLabel = userRole === "client" ? "Freelancer" : "Client";
@@ -135,21 +147,12 @@ export function RecentProjects({ userRole }: RecentProjectsProps) {
                   <h4 className="font-semibold text-sm sm:text-base">
                     {project.title}
                   </h4>
+                  {/* Status Badge with mapping */}
                   <Badge
-                    variant={
-                      project.status === "in-progress" 
-                        ? "default" 
-                        : project.status === "review" 
-                          ? "secondary" 
-                          : "outline"
-                    }
+                    variant={statusBadgeVariant[project.status] || "outline"}
                     className="sm:ml-2 w-fit"
                   >
-                    {project.status === "in-progress" 
-                      ? "In Progress" 
-                      : project.status === "review" 
-                        ? "In Review" 
-                        : "Completed"}
+                    {statusLabels[project.status] || project.status}
                   </Badge>
                 </div>
                 <p className="text-sm text-muted-foreground line-clamp-1">
@@ -167,10 +170,21 @@ export function RecentProjects({ userRole }: RecentProjectsProps) {
                   </div>
                   <div className="flex items-center text-muted-foreground">
                     <Avatar className="h-5 w-5 mr-1">
-                      <AvatarImage src={userRole === "client" ? project.freelancer.avatar : project.client.avatar} alt="" />
-                      <AvatarFallback>{userRole === "client" ? project.freelancer.initials : project.client.initials}</AvatarFallback>
+                      {userRole === "client" && 'freelancer' in project && project.freelancer ? (
+                        <>
+                          <AvatarImage src={project.freelancer.avatar} alt="" />
+                          <AvatarFallback>{project.freelancer.initials}</AvatarFallback>
+                        </>
+                      ) : null}
+                      {userRole !== "client" && 'client' in project && project.client ? (
+                        <>
+                          <AvatarImage src={project.client.avatar} alt="" />
+                          <AvatarFallback>{project.client.initials}</AvatarFallback>
+                        </>
+                      ) : null}
                     </Avatar>
-                    {userRole === "client" ? project.freelancer.name : project.client.name}
+                    {userRole === "client" && 'freelancer' in project && project.freelancer ? project.freelancer.name : null}
+                    {userRole !== "client" && 'client' in project && project.client ? project.client.name : null}
                   </div>
                 </div>
               </div>

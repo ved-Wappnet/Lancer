@@ -5,12 +5,22 @@ import { Save, Share, Flag } from "lucide-react";
 import Image from "next/image";
 import ReferenceImage from "@/public/images/Reference.jpeg"
 import ReferenceImage2 from "@/public/images/ReferenceImages.jpeg"
+import { useGetProjectByIdQuery } from "@/services/projectApi";
+import Loader from "../ui/loader";
 
 interface ProjectDetailsProps {
   projectId: string;
 }
 
 export function ProjectDetails({ projectId }: ProjectDetailsProps) {
+
+
+  const { data: project, isLoading,isFetching } = useGetProjectByIdQuery(projectId);
+
+  if (isLoading || isFetching) {
+    return <Loader/>
+  }
+
   return (
     <div className="space-y-6">
       <Card>
@@ -19,34 +29,7 @@ export function ProjectDetails({ projectId }: ProjectDetailsProps) {
         </CardHeader>
         <CardContent className="space-y-4">
           <div className="prose max-w-none dark:prose-invert">
-            <p>We're looking for an experienced web designer to redesign our e-commerce website with a focus on improving user experience and conversion rates.</p>
-            
-            <h3>Project Goals:</h3>
-            <ul>
-              <li>Create a modern, responsive design that works across all devices</li>
-              <li>Optimize the checkout process to reduce cart abandonment</li>
-              <li>Improve product discovery and filtering</li>
-              <li>Implement new branding guidelines</li>
-              <li>Design a custom dashboard for loyalty program members</li>
-            </ul>
-            
-            <h3>Requirements:</h3>
-            <ul>
-              <li>Experience with e-commerce design and optimization</li>
-              <li>Proficiency in Figma for design deliverables</li>
-              <li>Understanding of conversion rate optimization</li>
-              <li>Knowledge of accessibility standards</li>
-            </ul>
-            
-            <h3>Deliverables:</h3>
-            <ul>
-              <li>Complete design mockups for all key pages</li>
-              <li>Interactive prototype for user testing</li>
-              <li>Design system with components and style guide</li>
-              <li>Design assets ready for development</li>
-            </ul>
-            
-            <p>This project is expected to take approximately 4 weeks to complete. The successful candidate will work closely with our marketing and development teams.</p>
+            <p>{project?.description}</p>
           </div>
           
           <div className="flex flex-wrap gap-2">
@@ -66,7 +49,7 @@ export function ProjectDetails({ projectId }: ProjectDetailsProps) {
         </CardContent>
       </Card>
       
-      <Card>
+      {/* <Card>
         <CardHeader>
           <CardTitle>Attachments</CardTitle>
           <CardDescription>Reference materials provided by the client</CardDescription>
@@ -135,7 +118,7 @@ export function ProjectDetails({ projectId }: ProjectDetailsProps) {
             </div>
           </div>
         </CardContent>
-      </Card>
+      </Card> */}
       
       <Card>
         <CardHeader>
@@ -144,13 +127,13 @@ export function ProjectDetails({ projectId }: ProjectDetailsProps) {
         </CardHeader>
         <CardContent>
           <div className="flex flex-wrap gap-2">
-            <div className="rounded-full bg-primary/10 text-primary px-3 py-1 text-sm">UI/UX Design</div>
-            <div className="rounded-full bg-primary/10 text-primary px-3 py-1 text-sm">Figma</div>
-            <div className="rounded-full bg-primary/10 text-primary px-3 py-1 text-sm">Responsive Design</div>
-            <div className="rounded-full bg-primary/10 text-primary px-3 py-1 text-sm">E-commerce</div>
-            <div className="rounded-full bg-primary/10 text-primary px-3 py-1 text-sm">Wireframing</div>
-            <div className="rounded-full bg-primary/10 text-primary px-3 py-1 text-sm">Prototyping</div>
-            <div className="rounded-full bg-primary/10 text-primary px-3 py-1 text-sm">User Research</div>
+            {Array.isArray(project?.skillsRequired) && project.skillsRequired.length > 0 ? (
+              project.skillsRequired.map((skill: string, idx: number) => (
+                <div key={idx} className="rounded-full bg-primary/10 text-primary px-3 py-1 text-sm">{skill}</div>
+              ))
+            ) : (
+              <span className="text-muted-foreground">No skills specified.</span>
+            )}
           </div>
         </CardContent>
       </Card>

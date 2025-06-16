@@ -12,8 +12,10 @@ import { RecentProjects } from "@/components/dashboard/recent-projects";
 import { DashboardMessages } from "@/components/dashboard/dashboard-messages";
 import { RecentActivity } from "@/components/dashboard/recent-activity";
 import { roleTypeMap, type RoleType } from "@/types/user";
+import { useSelector } from "react-redux";
 
 export default function DashboardPage() {
+  const user = useSelector((state: any) => state.auth.user);
   // In a real app, this would come from a user context or API
   const [userRole, setUserRole] = useState<RoleType>("client");
   
@@ -25,7 +27,7 @@ export default function DashboardPage() {
   return (
     <div className="space-y-8">
       <UserWelcome 
-        name="John Doe"
+        name={user?.name}
         role={userRole}
         onRoleToggle={toggleRole}
       />

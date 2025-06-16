@@ -1,3 +1,5 @@
+
+
 import Image from "next/image";
 import { Button } from "@/components/ui/button";
 import {
@@ -93,11 +95,11 @@ export default function Home() {
                   key={index}
                   className="bg-card p-6 rounded-lg shadow-sm border hover:shadow-md transition-shadow"
                 >
-                  <div className="mb-4 text-primary">{feature.icon}</div>
+                  <div className="mb-4 text-primary">{feature?.icon}</div>
                   <h3 className="text-xl font-semibold mb-2">
-                    {feature.title}
+                    {feature?.title}
                   </h3>
-                  <p className="text-muted-foreground">{feature.description}</p>
+                  <p className="text-muted-foreground">{feature?.description}</p>
                 </div>
               ))}
             </div>

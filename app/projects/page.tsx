@@ -21,6 +21,34 @@ export default function ProjectsPage() {
   const [searchQuery, setSearchQuery] = useState("");
   const [categoryFilter, setCategoryFilter] = useState("all");
 
+  // Only allow the specific union types for status and category
+  type StatusFilterType = 0 | 1 | 2 | 3 | "all";
+  type CategoryFilterType = 0 | 1 | 2 | 3 | "all";
+
+  const categoryMap: Record<string, CategoryFilterType> = {
+    design: 0,
+    development: 1,
+    marketing: 2,
+    writing: 3,
+  };
+  const statusMap: Record<string, StatusFilterType> = {
+    draft: 0,
+    active: 1,
+    completed: 2,
+    review: 3,
+  };
+
+  // Helper to get numeric category or 'all'
+  const getCategoryFilter = (val: string): CategoryFilterType => {
+    if (val === "all") return "all";
+    return categoryMap[val] !== undefined ? categoryMap[val] : "all";
+  };
+  // Helper to get numeric status or 'all'
+  const getStatusFilter = (val: string): StatusFilterType => {
+    if (val === "all") return "all";
+    return statusMap[val] !== undefined ? statusMap[val] : "all";
+  };
+
   return (
     <div className="space-y-8">
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
@@ -51,6 +79,7 @@ export default function ProjectsPage() {
                 <Label htmlFor="category" className="sr-only">
                   Category
                 </Label>
+                
                 <Select
                   value={categoryFilter}
                   onValueChange={setCategoryFilter}
@@ -80,29 +109,29 @@ export default function ProjectsPage() {
               <TabsContent value="all" className="space-y-4">
                 <ProjectList
                   searchQuery={searchQuery}
-                  categoryFilter={categoryFilter}
+                  categoryFilter={getCategoryFilter(categoryFilter)}
                   statusFilter="all"
                 />
               </TabsContent>
               <TabsContent value="active" className="space-y-4">
                 <ProjectList
                   searchQuery={searchQuery}
-                  categoryFilter={categoryFilter}
-                  statusFilter="active"
+                  categoryFilter={getCategoryFilter(categoryFilter)}
+                  statusFilter={getStatusFilter("active")}
                 />
               </TabsContent>
               <TabsContent value="completed" className="space-y-4">
                 <ProjectList
                   searchQuery={searchQuery}
-                  categoryFilter={categoryFilter}
-                  statusFilter="completed"
+                  categoryFilter={getCategoryFilter(categoryFilter)}
+                  statusFilter={getStatusFilter("completed")}
                 />
               </TabsContent>
               <TabsContent value="draft" className="space-y-4">
                 <ProjectList
                   searchQuery={searchQuery}
-                  categoryFilter={categoryFilter}
-                  statusFilter="draft"
+                  categoryFilter={getCategoryFilter(categoryFilter)}
+                  statusFilter={getStatusFilter("draft")}
                 />
               </TabsContent>
             </Tabs>

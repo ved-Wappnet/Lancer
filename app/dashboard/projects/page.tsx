@@ -17,9 +17,70 @@ import { ProjectList } from "@/components/projects/project-list";
 import { CreateProjectButton } from "@/components/projects/create-project-button";
 import { Search, Briefcase, Filter } from "lucide-react";
 
+import { useGetProjectsQuery } from "@/services/projectApi";
+
 export default function ProjectsPage() {
   const [searchQuery, setSearchQuery] = useState("");
+
+
   const [categoryFilter, setCategoryFilter] = useState("all");
+
+  // Mapping objects for category and status string values to numeric equivalents
+  // Only allow the specific union types for status and category
+  type StatusFilterType = 0 | 1 | 2 | 3 | "all";
+  type CategoryFilterType = 0 | 1 | 2 | 3 | "all";
+
+  const categoryMap: Record<string, CategoryFilterType> = {
+    design: 0,
+    development: 1,
+    marketing: 2,
+    writing: 3,
+  };
+  
+  const statusMap: Record<string, StatusFilterType> = {
+    draft: 0,
+    active: 1,
+    completed: 2,
+    review: 3,
+  };
+
+  // Helper to get numeric category or 'all'
+  const getCategoryFilter = (val: string): CategoryFilterType => {
+    if (val === "all") return "all";
+    return categoryMap[val] !== undefined ? categoryMap[val] : "all";
+  };
+  // Helper to get numeric status or 'all'
+  const getStatusFilter = (val: string): StatusFilterType => {
+    if (val === "all") return "all";
+    return statusMap[val] !== undefined ? statusMap[val] : "all";
+  };
+
+  // Fetch all projects for stats
+  const { data: allProjects, isLoading: projectsLoading, error: projectsError } = useGetProjectsQuery();
+
+  // Count projects by status (0: Draft, 1: Active, 2: Completed, 3: In Review)
+  const statusCounts = (allProjects || []).reduce(
+    (acc, project) => {
+      switch (project.status) {
+        case 0:
+          acc.draft++;
+          break;
+        case 1:
+          acc.active++;
+          break;
+        case 2:
+          acc.completed++;
+          break;
+        case 3:
+          acc.inReview++;
+          break;
+        default:
+          break;
+      }
+      return acc;
+    },
+    { active: 0, completed: 0, inReview: 0, draft: 0 }
+  );
 
   return (
     <div className="space-y-8">
@@ -46,6 +107,7 @@ export default function ProjectsPage() {
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
                 />
+
               </div>
               <div className="flex items-center gap-2">
                 <Label htmlFor="category" className="sr-only">
@@ -79,30 +141,30 @@ export default function ProjectsPage() {
               </TabsList>
               <TabsContent value="all" className="space-y-4">
                 <ProjectList
-                  searchQuery={searchQuery}
-                  categoryFilter={categoryFilter}
+                searchQuery={searchQuery}
+                  categoryFilter={getCategoryFilter(categoryFilter)}
                   statusFilter="all"
                 />
               </TabsContent>
               <TabsContent value="active" className="space-y-4">
                 <ProjectList
-                  searchQuery={searchQuery}
-                  categoryFilter={categoryFilter}
-                  statusFilter="active"
+                searchQuery={searchQuery}
+                  categoryFilter={getCategoryFilter(categoryFilter)}
+                  statusFilter={getStatusFilter("active")}
                 />
               </TabsContent>
               <TabsContent value="completed" className="space-y-4">
                 <ProjectList
-                  searchQuery={searchQuery}
-                  categoryFilter={categoryFilter}
-                  statusFilter="completed"
+                searchQuery={searchQuery}
+                  categoryFilter={getCategoryFilter(categoryFilter)}
+                  statusFilter={getStatusFilter("completed")}
                 />
               </TabsContent>
               <TabsContent value="draft" className="space-y-4">
                 <ProjectList
-                  searchQuery={searchQuery}
-                  categoryFilter={categoryFilter}
-                  statusFilter="draft"
+                searchQuery={searchQuery}
+                  categoryFilter={getCategoryFilter(categoryFilter)}
+                  statusFilter={getStatusFilter("draft")}
                 />
               </TabsContent>
             </Tabs>
@@ -123,28 +185,28 @@ export default function ProjectsPage() {
                       <div className="h-4 w-4 rounded-full bg-primary mr-2" />
                       <span>Active</span>
                     </div>
-                    <span className="font-medium">5</span>
+                    <span className="font-medium">{projectsLoading ? "-" : statusCounts.active}</span>
                   </div>
                   <div className="flex items-center justify-between text-sm">
                     <div className="flex items-center">
                       <div className="h-4 w-4 rounded-full bg-green-500 mr-2" />
                       <span>Completed</span>
                     </div>
-                    <span className="font-medium">24</span>
+                    <span className="font-medium">{projectsLoading ? "-" : statusCounts.completed}</span>
                   </div>
                   <div className="flex items-center justify-between text-sm">
                     <div className="flex items-center">
                       <div className="h-4 w-4 rounded-full bg-yellow-500 mr-2" />
                       <span>In Review</span>
                     </div>
-                    <span className="font-medium">3</span>
+                    <span className="font-medium">{projectsLoading ? "-" : statusCounts.inReview}</span>
                   </div>
                   <div className="flex items-center justify-between text-sm">
                     <div className="flex items-center">
                       <div className="h-4 w-4 rounded-full bg-muted mr-2" />
                       <span>Draft</span>
                     </div>
-                    <span className="font-medium">2</span>
+                    <span className="font-medium">{projectsLoading ? "-" : statusCounts.draft}</span>
                   </div>
                 </div>
               </div>
