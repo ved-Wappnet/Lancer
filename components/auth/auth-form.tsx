@@ -24,6 +24,9 @@ import {
 } from "@/components/ui/select";
 import { useToast } from "@/hooks/use-toast";
 import Link from "next/link";
+import { useSignInMutation, useSignUpMutation } from "@/services/authApi";
+import { setUser } from "@/store/authSlice";
+import { useDispatch } from "react-redux";
 
 // Form schema validation
 const signInFormSchema = z.object({
@@ -56,6 +59,11 @@ export function AuthForm({ mode, defaultRole }: AuthFormProps) {
   const [isLoading, setIsLoading] = useState(false);
   const router = useRouter();
   const { toast } = useToast();
+  const dispatch = useDispatch();
+
+  // RTK Query mutations
+  const [signIn, { isLoading: isSignInLoading }] = useSignInMutation();
+  const [signUp, { isLoading: isSignUpLoading }] = useSignUpMutation();
 
   // Initialize form based on mode
   const signInForm = useForm<SignInFormValues>({
@@ -79,25 +87,20 @@ export function AuthForm({ mode, defaultRole }: AuthFormProps) {
   // Form submission handlers
   async function onSignInSubmit(data: SignInFormValues) {
     setIsLoading(true);
-
     try {
-      // Mock API call - would be replaced with actual authentication
-      console.log("Sign in data:", data);
-
-      // Show success message
+      const result = await signIn(data).unwrap();
+      dispatch(setUser(result.user));
       toast({
         title: "Signed in successfully!",
         description: "Redirecting to your dashboard...",
       });
-
-      // Redirect to dashboard
       setTimeout(() => {
         router.push("/dashboard");
       }, 1500);
-    } catch (error) {
+    } catch (err: any) {
       toast({
-        title: "Something went wrong",
-        description: "Please try again later",
+        title: "Sign in failed",
+        description: err?.data?.error || err?.error || "Please try again later",
         variant: "destructive",
       });
     } finally {
@@ -107,25 +110,20 @@ export function AuthForm({ mode, defaultRole }: AuthFormProps) {
 
   async function onSignUpSubmit(data: SignUpFormValues) {
     setIsLoading(true);
-
     try {
-      // Mock API call - would be replaced with actual registration
-      console.log("Sign up data:", data);
-
-      // Show success message
+      const result = await signUp(data).unwrap();
+      dispatch(setUser(result.user));
       toast({
         title: "Account created successfully!",
         description: "Redirecting to your dashboard...",
       });
-
-      // Redirect to dashboard
       setTimeout(() => {
         router.push("/dashboard");
       }, 1500);
-    } catch (error) {
+    } catch (err: any) {
       toast({
-        title: "Something went wrong",
-        description: "Please try again later",
+        title: "Sign up failed",
+        description: err?.data?.error || err?.error || "Please try again later",
         variant: "destructive",
       });
     } finally {
@@ -167,8 +165,8 @@ export function AuthForm({ mode, defaultRole }: AuthFormProps) {
                 </FormItem>
               )}
             />
-            <Button type="submit" className="w-full" disabled={isLoading}>
-              {isLoading ? "Signing in..." : "Sign in"}
+            <Button type="submit" className="w-full" disabled={isLoading || isSignInLoading || isSignUpLoading}>
+              {(isLoading || isSignInLoading || isSignUpLoading) ? "Loading..." : "Sign In"}
             </Button>
           </form>
         </Form>
@@ -254,8 +252,8 @@ export function AuthForm({ mode, defaultRole }: AuthFormProps) {
               </FormItem>
             )}
           />
-          <Button type="submit" className="w-full" disabled={isLoading}>
-            {isLoading ? "Creating account..." : "Create account"}
+          <Button type="submit" className="w-full" disabled={isLoading || isSignInLoading || isSignUpLoading}>
+            {(isLoading || isSignInLoading || isSignUpLoading) ? "Loading..." : "Sign Up"}
           </Button>
         </form>
       </Form>

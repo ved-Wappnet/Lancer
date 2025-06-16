@@ -3,6 +3,8 @@ import { Separator } from "@/components/ui/separator";
 import { Button } from "@/components/ui/button";
 import { Save, Share, Flag } from "lucide-react";
 import Image from "next/image";
+import ReferenceImage from "@/public/images/Reference.jpeg"
+import ReferenceImage2 from "@/public/images/ReferenceImages.jpeg"
 
 interface ProjectDetailsProps {
   projectId: string;
@@ -98,7 +100,7 @@ export function ProjectDetails({ projectId }: ProjectDetailsProps) {
             <div className="rounded-lg border bg-card p-3 flex items-center gap-3">
               <div className="h-14 w-14 rounded-md overflow-hidden">
                 <Image 
-                  src="https://images.pexels.com/photos/326503/pexels-photo-326503.jpeg" 
+                  src={ReferenceImage}
                   alt="Reference image"
                   width={60}
                   height={60}
@@ -116,7 +118,7 @@ export function ProjectDetails({ projectId }: ProjectDetailsProps) {
             <div className="rounded-lg border bg-card p-3 flex items-center gap-3">
               <div className="h-14 w-14 rounded-md overflow-hidden">
                 <Image 
-                  src="https://images.pexels.com/photos/844124/pexels-photo-844124.jpeg" 
+                  src={ReferenceImage2} 
                   alt="Reference image"
                   width={60}
                   height={60}

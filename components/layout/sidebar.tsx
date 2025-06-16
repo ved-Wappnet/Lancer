@@ -14,6 +14,7 @@ import {
   FileText,
   PieChart,
   CheckCircle,
+  User,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";
@@ -72,6 +73,12 @@ const navigationItems = [
     title: "Analytics",
     href: "/dashboard/analytics",
     icon: PieChart,
+    roles: ["client", "freelancer", "admin"],
+  },
+  {
+    title: "Profile",
+    href: "/dashboard/profile",
+    icon: User,
     roles: ["client", "freelancer", "admin"],
   },
 ];

@@ -1,5 +1,8 @@
 import Link from "next/link";
 import { Briefcase } from "lucide-react";
+import Image from "next/image";
+
+import AuthLogo from "@/public/images/login.jpg"
 
 interface AuthLayoutProps {
   children: React.ReactNode;
@@ -17,6 +20,13 @@ export function AuthLayout({ children, title, description }: AuthLayoutProps) {
             <Briefcase className="mr-2 h-6 w-6" />
             <span>Lancer</span>
           </Link>
+        </div>
+        <div className="relative z-20 flex items-center justify-center flex-grow">
+          <Image
+            src={AuthLogo}
+            alt="Freelancer working remotely"
+            className="max-w-full max-h-[50vh] object-contain"
+          />
         </div>
         <div className="relative z-20 mt-auto">
           <blockquote className="space-y-2">
