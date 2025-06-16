@@ -1,6 +1,7 @@
 import { ProjectStatus } from '@/models/Project';
 import { createApi, fetchBaseQuery } from '@reduxjs/toolkit/query/react';
 import { baseApi } from './baseApi';
+import { KEEP_UNUSED_DATA_FOR } from '@/data/Constant';
 
 export interface ProjectPayload {
   title: string;
@@ -41,6 +42,7 @@ export const projectApi = baseApi.injectEndpoints({
         method: 'GET',
       }),
       providesTags: ['projects'],
+      keepUnusedDataFor:KEEP_UNUSED_DATA_FOR,
     }),
     updateProject: builder.mutation<ProjectResponse, { id: number | string } & ProjectPayload>({
       query: ({ id, ...body }) => ({

@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import RoleGuard from '@/components/auth/RoleGuard';
 import { PageHeader } from "@/components/shared/page-header";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -246,6 +247,16 @@ const ActivityItem = ({ item }: { item: any }) => {
 };
 
 export default function AnalyticsPage() {
+  // Wrap the entire page in RoleGuard for best practice
+  return (
+    <RoleGuard allowedRoles={['client']}>
+      <AnalyticsPageContent />
+    </RoleGuard>
+  );
+}
+
+// Extract the actual page content to a separate component for clarity and maintainability
+function AnalyticsPageContent() {
   const [timeRange, setTimeRange] = useState<TimeRange>("30d");
   const [isLoading, setIsLoading] = useState(false);
   

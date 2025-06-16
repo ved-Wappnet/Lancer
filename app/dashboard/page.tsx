@@ -12,31 +12,35 @@ import { RecentProjects } from "@/components/dashboard/recent-projects";
 import { DashboardMessages } from "@/components/dashboard/dashboard-messages";
 import { RecentActivity } from "@/components/dashboard/recent-activity";
 import { roleTypeMap, type RoleType } from "@/types/user";
-import { useSelector } from "react-redux";
+import { useSelector, useDispatch } from "react-redux";
+import { setUser } from "@/store/authSlice";
 
 export default function DashboardPage() {
+  const dispatch = useDispatch();
   const user = useSelector((state: any) => state.auth.user);
-  // In a real app, this would come from a user context or API
-  const [userRole, setUserRole] = useState<RoleType>("client");
-  
-  // Simulate role toggle for demo purposes
+
+  // Toggle role in Redux for demo purposes
   const toggleRole = () => {
-    setUserRole(prev => prev === "client" ? "freelancer" : "client");
+    if (!user) return;
+    dispatch(setUser({
+      ...user,
+      role: user.role === "client" ? "freelancer" : "client"
+    }));
   };
 
   return (
     <div className="space-y-8">
       <UserWelcome 
         name={user?.name}
-        role={userRole}
+        role={user?.role}
         onRoleToggle={toggleRole}
       />
       
-      <StatsGrid userRole={userRole} />
+      <StatsGrid userRole={user?.role} />
       
       <div className="grid grid-cols-1 md:grid-cols-12 gap-6">
         <div className="md:col-span-8 space-y-6">
-          <RecentProjects userRole={userRole} />
+          <RecentProjects userRole={user?.role} />
           <RecentActivity />
         </div>
         <div className="md:col-span-4 space-y-6">

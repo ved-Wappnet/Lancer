@@ -6,18 +6,12 @@ import { useRouter } from "next/navigation";
 import {
   X,
   Menu,
-  LayoutDashboard,
-  Briefcase,
-  Clock,
-  CreditCard,
-  Users,
-  FileText,
-  PieChart,
-  CheckCircle,
-  User,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";
+import { useSelector } from "react-redux";
+import { RootState } from "@/store";
+import { navigationItems } from "@/routers/siderRoutes";
 
 interface SidebarProps {
   isOpen: boolean;
@@ -25,68 +19,13 @@ interface SidebarProps {
   pathname: string;
 }
 
-// Navigation items with client and freelancer specific items
-const navigationItems = [
-  {
-    title: "Dashboard",
-    href: "/dashboard",
-    icon: LayoutDashboard,
-    roles: ["client", "freelancer", "admin"],
-  },
-  {
-    title: "Projects",
-    href: "/dashboard/projects",
-    icon: Briefcase,
-    roles: ["client", "freelancer", "admin"],
-  },
-  {
-    title: "Contracts",
-    href: "/dashboard/contracts",
-    icon: FileText,
-    roles: ["client", "freelancer", "admin"],
-  },
-  {
-    title: "Milestones",
-    href: "/dashboard/milestones",
-    icon: CheckCircle,
-    roles: ["client", "freelancer", "admin"],
-  },
-  {
-    title: "Payments",
-    href: "/dashboard/payments",
-    icon: CreditCard,
-    roles: ["client", "freelancer", "admin"],
-  },
-  {
-    title: "Freelancers",
-    href: "/dashboard/freelancers",
-    icon: Users,
-    roles: ["client", "admin"],
-  },
-  {
-    title: "My Proposals",
-    href: "/dashboard/proposals",
-    icon: Clock,
-    roles: ["freelancer"],
-  },
-  {
-    title: "Analytics",
-    href: "/dashboard/analytics",
-    icon: PieChart,
-    roles: ["client", "freelancer", "admin"],
-  },
-  {
-    title: "Profile",
-    href: "/dashboard/profile",
-    icon: User,
-    roles: ["client", "freelancer", "admin"],
-  },
-];
+
 
 export function Sidebar({ isOpen, setIsOpen, pathname }: SidebarProps) {
   const router = useRouter();
-  // In a real app, you'd get the user role from context/API
-  const userRole = "client";
+  // Get the user role from Redux store
+  const user = useSelector((state: RootState) => state.auth.user);
+  const userRole = user?.role || "";
 
   return (
     <>
@@ -131,7 +70,7 @@ export function Sidebar({ isOpen, setIsOpen, pathname }: SidebarProps) {
         <ScrollArea className="flex-1 px-2">
           <nav className="flex flex-col gap-1 py-4">
             {navigationItems
-              .filter((item) => item.roles.includes(userRole))
+              .filter((item) => userRole && item.roles.includes(userRole))
               .map((item) => (
                 <Link
                   key={item.href}
