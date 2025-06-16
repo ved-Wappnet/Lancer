@@ -1,5 +1,6 @@
 import { configureStore, combineReducers } from '@reduxjs/toolkit';
 import { baseApi } from './services/baseApi';
+import { projectApi } from './services/projectApi';
 import authReducer from './store/authSlice';
 import { persistReducer, persistStore } from 'redux-persist';
 import storage from 'redux-persist/lib/storage';
@@ -20,7 +21,8 @@ export const store = configureStore({
   middleware: (getDefaultMiddleware) =>
     getDefaultMiddleware({
       serializableCheck: false,
-    }).concat(baseApi.middleware),
+    })
+      .concat(baseApi.middleware)
 });
 
 export const persistor = persistStore(store);

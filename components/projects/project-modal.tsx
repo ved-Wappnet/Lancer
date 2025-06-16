@@ -1,8 +1,6 @@
 "use client";
 
-import { useState } from "react";
-import { useCreateProjectMutation } from "@/services/projectApi";
-import { PlusCircle } from "lucide-react";
+import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -25,13 +23,28 @@ import {
 } from "@/components/ui/select";
 import { useToast } from "@/hooks/use-toast";
 import { useRouter } from "next/navigation";
+import { useCreateProjectMutation, useUpdateProjectMutation } from "@/services/projectApi";
 
-export function CreateProjectButton() {
-  const [open, setOpen] = useState(false);
-  const [isLoading, setIsLoading] = useState(false);
+interface ProjectModalProps {
+  open: boolean;
+  setOpen: (open: boolean) => void;
+  mode: "create" | "edit";
+  initialData?: {
+    id?: string;
+    title?: string;
+    description?: string;
+    category?: number;
+    status?: number;
+    budget?: string;
+    deadline?: string;
+    skillsRequired?: string[];
+  };
+}
+
+export function ProjectModal({ open, setOpen, mode, initialData }: ProjectModalProps) {
   const { toast } = useToast();
   const router = useRouter();
-  
+
   // Form state
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
@@ -40,57 +53,24 @@ export function CreateProjectButton() {
   const [budget, setBudget] = useState("");
   const [deadline, setDeadline] = useState("");
   const [skills, setSkills] = useState(""); // New field
-  
-  const [createProject] = useCreateProjectMutation();
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    
-    if (!title || !description || budget === "") {
-      toast({
-        title: "Missing fields",
-        description: "Please fill out all required fields",
-        variant: "destructive",
-      });
-      return;
-    }
-    
-    setIsLoading(true);
-    
-    try {
-      // TODO: Replace with actual user id from auth context
-      await createProject({
-        title,
-        description,
-        category,
-        budget,
-        deadline: deadline || undefined,
-        status,
-        skillsRequired: skills.split(',').map(s => s.trim()).filter(Boolean),
-      }).unwrap();
+  const [createProject,{isLoading:isCreating}] = useCreateProjectMutation();
+  const [updateProject,{isLoading:isUpdating}] = useUpdateProjectMutation();
 
-      toast({
-        title: "Project created",
-        description: "Your project has been created successfully",
-      });
-
-      // Reset form and close dialog
-      setOpen(false);
+  useEffect(() => {
+    if (initialData) {
+      setTitle(initialData.title || "");
+      setDescription(initialData.description || "");
+      setCategory(initialData.category ?? 0);
+      setStatus(initialData.status ?? 0);
+      setBudget(initialData.budget || "");
+      setDeadline(initialData.deadline || "");
+      setSkills(initialData.skillsRequired ? initialData.skillsRequired.join(', ') : "");
+    } else {
       resetForm();
-
-      // Redirect to projects page
-      router.push("/dashboard/projects");
-    } catch (error: any) {
-      toast({
-        title: "Something went wrong",
-        description: error?.data?.error || "Please try again later",
-        variant: "destructive",
-      });
-    } finally {
-      setIsLoading(false);
     }
-  };
-  
+  }, [initialData, open]);
+
   const resetForm = () => {
     setTitle("");
     setDescription("");
@@ -101,20 +81,72 @@ export function CreateProjectButton() {
     setSkills("");
   };
 
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!title || !description || budget === "") {
+      toast({
+        title: "Missing fields",
+        description: "Please fill out all required fields",
+        variant: "destructive",
+      });
+      return;
+    }
+    
+    try {
+      if (mode === "create") {
+        await createProject({
+          title,
+          description,
+          category,
+          budget,
+          deadline: deadline || undefined,
+          status,
+          skillsRequired: skills.split(',').map(s => s.trim()).filter(Boolean),
+        }).unwrap();
+        toast({
+          title: "Project created",
+          description: "Your project has been created successfully",
+        });
+      } else if (mode === "edit" && initialData?.id) {
+        await updateProject({
+          id: initialData.id,
+          title,
+          description,
+          category,
+          budget,
+          deadline: deadline || undefined,
+          status,
+          skillsRequired: skills.split(',').map(s => s.trim()).filter(Boolean),
+        });
+        toast({
+          title: "Project updated",
+          description: "Your project has been updated successfully",
+        });
+      }
+      setOpen(false);
+      resetForm();
+      router.push("/dashboard/projects");
+    } catch (error: any) {
+      toast({
+        title: "Something went wrong",
+        description: error?.data?.error || "Please try again later",
+        variant: "destructive",
+      });
+    } finally {
+      
+    }
+  };
+
   return (
     <Dialog open={open} onOpenChange={setOpen}>
-      <DialogTrigger asChild>
-        <Button>
-          <PlusCircle className="mr-2 h-4 w-4" />
-          Create Project
-        </Button>
-      </DialogTrigger>
       <DialogContent className="sm:max-w-[525px]">
         <form onSubmit={handleSubmit}>
           <DialogHeader>
-            <DialogTitle>Create a new project</DialogTitle>
+            <DialogTitle>{mode === "edit" ? "Edit Project" : "Create a new project"}</DialogTitle>
             <DialogDescription>
-              Fill out the details below to post a new project and start receiving proposals.
+              {mode === "edit"
+                ? "Update your project details below."
+                : "Fill out the details below to post a new project and start receiving proposals."}
             </DialogDescription>
           </DialogHeader>
           <div className="grid gap-4 py-4">
@@ -203,8 +235,8 @@ export function CreateProjectButton() {
             <Button variant="outline" type="button" onClick={() => setOpen(false)}>
               Cancel
             </Button>
-            <Button type="submit" disabled={isLoading}>
-              {isLoading ? "Creating..." : "Create Project"}
+            <Button type="submit" disabled={mode === "edit" ? isUpdating : isCreating}>
+              {(mode === "edit" ? (isUpdating ? "Updating..." : "Update Project") : (isCreating ? "Creating..." : "Create Project"))}
             </Button>
           </DialogFooter>
         </form>
