@@ -21,7 +21,7 @@ export async function GET(req: NextRequest, { params }: { params: { id: string }
 export async function PUT(req: NextRequest, { params }: { params: { id: string } }) {
   try {
     const id = Number(params.id);
-    const { title, description, category, budget, deadline, status } = await req.json();
+    const { title, description, category, budget, deadline, status, skillsRequired } = await req.json();
 
     if (!title || !description || category === undefined || !budget || status === undefined) {
       return NextResponse.json({ error: "Missing required fields" }, { status: 400 });
@@ -33,17 +33,27 @@ export async function PUT(req: NextRequest, { params }: { params: { id: string }
       return NextResponse.json({ error: "Category and status must be numbers" }, { status: 400 });
     }
 
-    const [updated] = await Project.update(
-      {
+    const updateData: any = {
         title,
         description,
         category: categoryNum,
         budget,
         deadline: deadline || null,
         status: statusNum as ProjectStatus,
-      },
-      { where: { id } }
-    );
+      };
+      // Only update skillsRequired if provided
+      if (skillsRequired !== undefined) {
+        // Accept both array and comma-separated string
+        if (Array.isArray(skillsRequired)) {
+          updateData.skillsRequired = skillsRequired;
+        } else if (typeof skillsRequired === 'string') {
+          updateData.skillsRequired = skillsRequired.split(',').map((s: string) => s.trim()).filter(Boolean);
+        }
+      }
+      const [updated] = await Project.update(
+        updateData,
+        { where: { id } }
+      );
 
     if (!updated) {
       return NextResponse.json({ error: "Project not found or not updated" }, { status: 404 });
