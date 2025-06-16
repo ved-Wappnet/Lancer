@@ -1,10 +1,12 @@
+import { KEEP_UNUSED_DATA_FOR } from "@/data/Constant";
 import { baseApi } from "./baseApi";
 
 export const profileApi = baseApi.injectEndpoints({
   endpoints: (builder) => ({
     getProfile: builder.query<any, void>({
       query: () => "profile",
-      providesTags:["profile"]
+      providesTags:["profile"],
+      keepUnusedDataFor:KEEP_UNUSED_DATA_FOR,
     }),
     updateProfileImage: builder.mutation<any, { image: string }>({
       query: (body) => ({

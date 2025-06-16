@@ -10,112 +10,47 @@ interface RecentProjectsProps {
   userRole: RoleType;
 }
 
-// Mock project data
-const clientProjects = [
-  {
-    id: "1",
-    title: "E-commerce Website Redesign",
-    description: "Redesign of e-commerce website with focus on UX and conversion optimization.",
-    status: "in-progress",
-    budget: "$4,500",
-    freelancer: {
-      id: "f1",
-      name: "Emma Wilson",
-      avatar: "/avatars/emma.png",
-      initials: "EW"
-    },
-    deadline: "June 15, 2025",
-  },
-  {
-    id: "2",
-    title: "Mobile App Development",
-    description: "Native iOS and Android app for food delivery service.",
-    status: "in-progress",
-    budget: "$8,000",
-    freelancer: {
-      id: "f2",
-      name: "David Chen",
-      avatar: "/avatars/david.png",
-      initials: "DC"
-    },
-    deadline: "July 30, 2025",
-  },
-  {
-    id: "3",
-    title: "Brand Identity Design",
-    description: "Logo, color palette, and brand guidelines for tech startup.",
-    status: "review",
-    budget: "$2,200",
-    freelancer: {
-      id: "f3",
-      name: "Sarah Johnson",
-      avatar: "/avatars/sarah.png",
-      initials: "SJ"
-    },
-    deadline: "May 25, 2025",
-  },
-];
+import { useGetProjectsQuery } from "@/services/projectApi";
 
-const freelancerProjects = [
-  {
-    id: "1",
-    title: "E-commerce Website Redesign",
-    description: "Redesign of e-commerce website with focus on UX and conversion optimization.",
-    status: "in-progress",
-    budget: "$4,500",
-    client: {
-      id: "c1",
-      name: "Acme Inc.",
-      avatar: "/avatars/acme.png",
-      initials: "AI"
-    },
-    deadline: "June 15, 2025",
-  },
-  {
-    id: "2",
-    title: "SEO Optimization Campaign",
-    description: "Full SEO audit and optimization strategy for tech blog.",
-    status: "in-progress",
-    budget: "$3,200",
-    client: {
-      id: "c2",
-      name: "TechBlog Media",
-      avatar: "/avatars/techblog.png",
-      initials: "TM"
-    },
-    deadline: "May 28, 2025",
-  },
-  {
-    id: "3",
-    title: "Social Media Strategy",
-    description: "Social media content plan and posting schedule for Q3.",
-    status: "review",
-    budget: "$1,800",
-    client: {
-      id: "c3",
-      name: "Green Earth Co.",
-      avatar: "/avatars/greenearth.png",
-      initials: "GE"
-    },
-    deadline: "May 15, 2025",
-  },
-];
+interface Project {
+  id: string;
+  title: string;
+  description: string;
+  status: string;
+  budget: string;
+  deadline: string;
+  freelancer?: {
+    id: string;
+    name: string;
+    avatar: string;
+    initials: string;
+  };
+  client?: {
+    id: string;
+    name: string;
+    avatar: string;
+    initials: string;
+  };
+}
 
 // Status mapping for extensibility
-const statusLabels: Record<string, string> = {
-  "in-progress": "In Progress",
-  "review": "In Review",
-  "completed": "Completed",
+// Map ProjectStatus number to label and badge variant
+const statusLabels: Record<number, string> = {
+  0: "Draft",
+  1: "Active",
+  2: "Completed",
+  3: "In Review",
 };
-const statusBadgeVariant: Record<string, "default" | "secondary" | "outline"> = {
-  "in-progress": "default",
-  "review": "secondary",
-  "completed": "outline",
+const statusBadgeVariant: Record<number, "default" | "secondary" | "outline"> = {
+  0: "outline",      // Draft
+  1: "default",      // Active
+  2: "outline",      // Completed
+  3: "secondary",    // In Review
 };
 
 export function RecentProjects({ userRole }: RecentProjectsProps) {
-  const projects = userRole === "client" ? clientProjects : freelancerProjects;
   const entityLabel = userRole === "client" ? "Freelancer" : "Client";
+  const { data: projects = [], isLoading, error } = useGetProjectsQuery();
 
   return (
     <Card>
@@ -128,7 +63,7 @@ export function RecentProjects({ userRole }: RecentProjectsProps) {
               : "Your active and recently accepted projects"}
           </CardDescription>
         </div>
-        <Link href="/projects">
+        <Link href="/dashboard/projects">
           <Button variant="ghost" size="sm">
             View all
             <ArrowRight className="ml-2 h-4 w-4" />
@@ -136,8 +71,10 @@ export function RecentProjects({ userRole }: RecentProjectsProps) {
         </Link>
       </CardHeader>
       <CardContent>
+        {isLoading && <div>Loading projects...</div>}
+        {error && <div className="text-red-500">{(error as any)?.message || "Failed to load projects"}</div>}
         <div className="space-y-4">
-          {projects.map((project) => (
+          {!isLoading && !error && projects.map((project: any) => (
             <div 
               key={project.id}
               className="flex flex-col sm:flex-row sm:items-center justify-between rounded-lg border p-4"
@@ -190,7 +127,7 @@ export function RecentProjects({ userRole }: RecentProjectsProps) {
               </div>
               
               <div className="mt-4 sm:mt-0">
-                <Link href={`/projects/${project.id}`}>
+                <Link href={`/dashboard/projects/${project.id}`}>
                   <Button size="sm">View Project</Button>
                 </Link>
               </div>
