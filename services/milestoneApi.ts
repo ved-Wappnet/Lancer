@@ -1,33 +1,6 @@
 import { createApi, fetchBaseQuery } from '@reduxjs/toolkit/query/react';
 import { baseApi } from './baseApi';
-
-export type MilestoneStatus = 'upcoming' | 'in-progress' | 'completed' | 'delayed';
-
-export interface MilestonePayload {
-  title: string;
-  description: string;
-  projectId: number;
-  dueDate: string;
-  progress: number;
-  status: number; // 1-4, matches backend DB
-}
-
-export interface MilestoneResponse {
-  id: number;
-  title: string;
-  description: string;
-  projectId: number;
-  dueDate: string;
-  progress: number;
-  status: number; // 1-4, matches backend DB
-  createdAt: string;
-  updatedAt: string;
-  project?: {
-    id: number;
-    title: string;
-    // add any other project fields you want to use
-  };
-}
+import type { MilestonePayload, MilestoneResponse } from '@/types/milestone';
 
 export const milestoneApi = baseApi.injectEndpoints({
   endpoints: (builder) => ({
