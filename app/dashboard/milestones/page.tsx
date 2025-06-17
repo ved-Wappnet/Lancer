@@ -6,7 +6,7 @@ import { Input } from "@/components/ui/input";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
-import { CalendarIcon, ChevronDown } from "lucide-react";
+import { CalendarIcon, ChevronDown, MoreVertical } from "lucide-react";
 import { format } from "date-fns";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { PageHeader } from "@/components/shared/page-header";
@@ -15,8 +15,9 @@ import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, D
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { useGetProjectsQuery } from "@/services/projectApi";
-import { useCreateMilestoneMutation, useGetMilestonesQuery } from "@/services/milestoneApi";
+import { useCreateMilestoneMutation, useGetMilestonesQuery, useUpdateMilestoneMutation, useDeleteMilestoneMutation } from "@/services/milestoneApi";
 import Loader from "@/components/ui/loader";
+import { toast } from "@/hooks/use-toast";
 
 type MilestoneStatus = 'upcoming' | 'in-progress' | 'completed' | 'delayed';
 
@@ -45,7 +46,7 @@ const numberToStatus = (num: number): MilestoneStatus => {
 interface Milestone {
   id: string | number;
   title: string;
-  project?: string | { title: string };
+  project?: string | { title: string ,id:number};
   dueDate: string;
   progress: number;
   status: number; // 1-4, matches backend
@@ -61,51 +62,86 @@ function isProjectWithTitle(project: unknown): project is { title: string } {
   return typeof project === "object" && project !== null && "title" in project && typeof (project as any).title === "string";
 }
 
-function MilestoneCard({ milestone }: MilestoneCardProps) {
+import {
+  DropdownMenu,
+  DropdownMenuTrigger,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSeparator
+} from "@/components/ui/dropdown-menu";
+
+interface MilestoneCardProps {
+  milestone: Milestone;
+  onEdit?: (milestone: Milestone) => void;
+  onDelete?: (milestone: Milestone) => void;
+}
+
+function MilestoneCard({ milestone, onEdit, onDelete }: MilestoneCardProps) {
   // Handle both string and object for project
   let projectTitle = "";
   if (typeof milestone.project === "string") projectTitle = milestone.project;
   else if (isProjectWithTitle(milestone.project)) projectTitle = milestone.project.title;
 
   return (
-    <div className="rounded-lg border bg-card p-6 shadow-sm">
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-        <div className="space-y-1">
-          <div className="flex items-center gap-2">
-            <h3 className="text-lg font-medium text-nowrap truncate ellipsis w-36" title={milestone?.title}>{milestone?.title}</h3>
-            <Badge
-              variant={(() => {
-                const status = numberToStatus(milestone.status);
-                if (status === 'upcoming') return 'secondary';
-                if (status === 'in-progress') return 'default';
-                if (status === 'completed') return 'outline';
-                return 'destructive';
-              })()}
-              className="whitespace-nowrap"
-            >
-              {numberToStatus(milestone.status)}
-            </Badge>
-          </div>
-          <p className="text-sm text-muted-foreground">
-            {projectTitle}
-          </p>
-          <p className="text-sm truncate ellipsis w-52" title={milestone.description}>{milestone.description}</p>
+  <div className="rounded-lg border bg-card p-6 shadow-sm relative">
+    {/* 3-dots menu top-right */}
+    <div className="absolute right-2 top-1 z-10">
+      <DropdownMenu>
+        <DropdownMenuTrigger asChild>
+          <button className="p-1.5 rounded-full hover:bg-accent focus:outline-none focus:ring-2 focus:ring-accent">
+            <MoreVertical className="w-4 h-4" />
+          </button>
+        </DropdownMenuTrigger>
+        <DropdownMenuContent align="end">
+          <DropdownMenuItem onClick={() => onEdit && onEdit(milestone)}>
+            Edit
+          </DropdownMenuItem>
+          <DropdownMenuSeparator />
+          <DropdownMenuItem className="text-destructive" onClick={() => onDelete && onDelete(milestone)}>
+            Delete
+          </DropdownMenuItem>
+        </DropdownMenuContent>
+      </DropdownMenu>
+    </div>
+    <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+      <div className="space-y-1">
+        <div className="flex items-center gap-2">
+          <h3 className="text-lg font-medium text-nowrap truncate ellipsis w-36" title={milestone?.title}>{milestone?.title}</h3>
+          <Badge
+            variant={(() => {
+              const status = numberToStatus(milestone.status);
+              if (status === 'upcoming') return 'secondary';
+              if (status === 'in-progress') return 'default';
+              if (status === 'completed') return 'outline';
+              return 'destructive';
+            })()}
+            className="whitespace-nowrap"
+          >
+            {numberToStatus(milestone.status)}
+          </Badge>
         </div>
-        <div className="space-y-2 min-w-[200px]">
-          <div className="flex justify-between text-sm">
-            <span className="text-muted-foreground">Due: {format(new Date(milestone.dueDate), "MMM d, yyyy")}</span>
-            <span className="font-medium">{milestone.progress}%</span>
-          </div>
-          <Progress value={milestone.progress} className="h-2" />
+        <p className="text-sm text-muted-foreground">
+          {projectTitle}
+        </p>
+        <p className="text-sm truncate ellipsis w-52" title={milestone.description}>{milestone.description}</p>
+      </div>
+      <div className="space-y-2 min-w-[200px]">
+        <div className="flex justify-between text-sm">
+          <span className="text-muted-foreground">Due: {format(new Date(milestone.dueDate), "MMM d, yyyy")}</span>
+          <span className="font-medium">{milestone.progress}%</span>
         </div>
+        <Progress value={milestone.progress} className="h-2" />
       </div>
     </div>
-  );
+  </div>
+);
 }
 
 export default function MilestonesPage() {
   // Modal state and form fields for creating a milestone
   const [createModalOpen, setCreateModalOpen] = useState(false);
+  const [isEditMode, setIsEditMode] = useState(false);
+  const [editingMilestoneId, setEditingMilestoneId] = useState<string | number | null>(null);
   const [milestoneTitle, setMilestoneTitle] = useState("");
   const [milestoneDescription, setMilestoneDescription] = useState("");
   const [milestoneProjectId, setMilestoneProjectId] = useState("");
@@ -116,21 +152,50 @@ export default function MilestonesPage() {
 
   // Add milestone to mock data (for demo, not persisted)
   const [createMilestone, { isLoading: isSubmitting }] = useCreateMilestoneMutation();
+  const [updateMilestone, { isLoading: isUpdating }] = useUpdateMilestoneMutation();
+  const [deleteMilestone, { isLoading: isDeleting }] = useDeleteMilestoneMutation();
+
+  // State for delete confirmation dialog
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+  const [milestoneToDelete, setMilestoneToDelete] = useState<Milestone | null>(null);
 
   const handleMilestoneSubmit = async (e: React.FormEvent) => {
-    // e.preventDefault();
-    console.log("statusToNumber(milestoneStatus)",statusToNumber(milestoneStatus));
-    
+    e.preventDefault();
     try {
-      await createMilestone({
-        title: milestoneTitle,
-        description: milestoneDescription,
-        projectId: Number(milestoneProjectId),
-        dueDate: milestoneDueDate,
-        progress: milestoneProgress,
-        status: statusToNumber(milestoneStatus),
-      }).unwrap();
-      setCreateModalOpen(false);
+      if (isEditMode && editingMilestoneId !== null) {
+        const response = await updateMilestone({
+          id: editingMilestoneId,
+          data: {
+            title: milestoneTitle,
+            description: milestoneDescription,
+            projectId: Number(milestoneProjectId),
+            dueDate: milestoneDueDate,
+            progress: milestoneProgress,
+            status: statusToNumber(milestoneStatus),
+          },
+        }).unwrap();
+        toast({
+          title: "Milestone Updated",
+          description: response?.message || "Milestone updated successfully."
+        });
+        setCreateModalOpen(false);
+      } else {
+        const response = await createMilestone({
+          title: milestoneTitle,
+          description: milestoneDescription,
+          projectId: Number(milestoneProjectId),
+          dueDate: milestoneDueDate,
+          progress: milestoneProgress,
+          status: statusToNumber(milestoneStatus),
+        }).unwrap();
+        toast({
+          title: "Milestone Created",
+          description: response?.message || "Milestone created successfully."
+        });
+        setCreateModalOpen(false);
+      }
+      setIsEditMode(false);
+      setEditingMilestoneId(null);
       setMilestoneTitle("");
       setMilestoneDescription("");
       setMilestoneProjectId("");
@@ -140,6 +205,21 @@ export default function MilestonesPage() {
     } catch (err) {
       // Optionally show error toast
     }
+  };
+
+  // Handle edit: open modal and prefill
+  const handleEditMilestone = (milestone: Milestone) => {
+    setIsEditMode(true);
+    setEditingMilestoneId(milestone.id);
+    setMilestoneTitle(milestone.title);
+    setMilestoneDescription(milestone.description);
+    setMilestoneProjectId(
+      typeof milestone.project === 'string' ? milestone.project : (milestone.project?.id ? String(milestone.project.id) : "")
+    );
+    setMilestoneDueDate(milestone.dueDate);
+    setMilestoneProgress(milestone.progress);
+    setMilestoneStatus(numberToStatus(milestone.status));
+    setCreateModalOpen(true);
   };
 
   const [searchQuery, setSearchQuery] = useState("");
@@ -182,7 +262,7 @@ export default function MilestonesPage() {
   }
 
   const filteredMilestones = sortMilestones(
-    (milestones || []).filter(milestone => {
+    (milestones?.data || []).filter(milestone => {
       const titleMatch = typeof milestone.title === 'string' && milestone.title.toLowerCase().includes(searchQuery.toLowerCase());
       const projectTitle = getProjectTitle(milestone.project);
       const projectMatch = typeof projectTitle === 'string' && projectTitle.toLowerCase().includes(searchQuery.toLowerCase());
@@ -253,8 +333,16 @@ export default function MilestonesPage() {
   ) : (
     <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
       {filteredMilestones.map((milestone) => (
-        <MilestoneCard key={milestone.id} milestone={milestone} />
-      ))}
+          <MilestoneCard
+            key={milestone.id}
+            milestone={milestone}
+            onEdit={handleEditMilestone}
+            onDelete={(m) => {
+              setMilestoneToDelete(m);
+              setDeleteDialogOpen(true);
+            }}
+          />
+        ))}
     </div>
   )}
 </div>
@@ -264,8 +352,8 @@ export default function MilestonesPage() {
         <DialogContent className="sm:max-w-[525px]">
           <form onSubmit={handleMilestoneSubmit}>
             <DialogHeader>
-              <DialogTitle>Create Milestone</DialogTitle>
-              <DialogDescription>Define a new milestone for your project.</DialogDescription>
+              <DialogTitle>{isEditMode ? "Edit Milestone" : "Create Milestone"}</DialogTitle>
+              <DialogDescription>{isEditMode ? "Update milestone details." : "Define a new milestone for your project."}</DialogDescription>
             </DialogHeader>
             <div className="grid gap-4 py-4">
               <div className="grid gap-2">
@@ -356,13 +444,51 @@ export default function MilestonesPage() {
               <Button variant="outline" type="button" onClick={() => setCreateModalOpen(false)}>
                 Cancel
               </Button>
-              <Button type="submit" disabled={isSubmitting}>
-                {isSubmitting ? "Creating..." : "Create Milestone"}
+              <Button type="submit" disabled={isSubmitting || isUpdating}>
+                {isEditMode
+                  ? (isUpdating ? "Saving..." : "Save Changes")
+                  : (isSubmitting ? "Creating..." : "Create Milestone")}
               </Button>
             </DialogFooter>
           </form>
         </DialogContent>
       </Dialog>
+    {/* Delete Confirmation Dialog */}
+    <Dialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
+      <DialogContent className="sm:max-w-[400px]">
+        <DialogHeader>
+          <DialogTitle>Delete Milestone</DialogTitle>
+          <DialogDescription>
+            Are you sure you want to delete this milestone?
+            <br />
+            <span className="font-semibold">{milestoneToDelete?.title}</span>
+          </DialogDescription>
+        </DialogHeader>
+        <DialogFooter>
+          <Button variant="outline" type="button" onClick={() => setDeleteDialogOpen(false)}>
+            Cancel
+          </Button>
+          <Button
+            type="button"
+            variant="destructive"
+            disabled={isDeleting}
+            onClick={async () => {
+              if (milestoneToDelete) {
+                const response = await deleteMilestone(milestoneToDelete.id).unwrap();
+                toast({
+                  title: "Milestone Deleted",
+                  description: response?.message || "Milestone deleted successfully."
+                });
+                setDeleteDialogOpen(false);
+                setMilestoneToDelete(null);
+              }
+            }}
+          >
+            {isDeleting ? "Deleting..." : "Delete"}
+          </Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
     </div>
   );
 }

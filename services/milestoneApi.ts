@@ -31,7 +31,7 @@ export interface MilestoneResponse {
 
 export const milestoneApi = baseApi.injectEndpoints({
   endpoints: (builder) => ({
-    createMilestone: builder.mutation<MilestoneResponse, MilestonePayload>({
+    createMilestone: builder.mutation<{ success: boolean; message: string; data: MilestoneResponse }, MilestonePayload>({
       query: (body) => ({
         url: '/milestones',
         method: 'POST',
@@ -39,7 +39,22 @@ export const milestoneApi = baseApi.injectEndpoints({
       }),
       invalidatesTags: ['projects'],
     }),
-    getMilestones: builder.query<MilestoneResponse[], void>({
+    updateMilestone: builder.mutation<{ success: boolean; message: string; data: MilestoneResponse }, { id: number | string; data: Partial<MilestonePayload> }>({
+      query: ({ id, data }) => ({
+        url: `/milestones/${id}`,
+        method: 'PATCH',
+        body: data,
+      }),
+      invalidatesTags: ['projects'],
+    }),
+    deleteMilestone: builder.mutation<{ success: boolean; message: string; data: null }, number | string>({
+      query: (id) => ({
+        url: `/milestones/${id}`,
+        method: 'DELETE',
+      }),
+      invalidatesTags: ['projects'],
+    }),
+    getMilestones: builder.query<{ success: boolean; message: string; data: MilestoneResponse[] }, void>({
       query: () => ({
         url: '/milestones',
         method: 'GET',
@@ -49,4 +64,4 @@ export const milestoneApi = baseApi.injectEndpoints({
   }),
 });
 
-export const { useCreateMilestoneMutation, useGetMilestonesQuery } = milestoneApi;
+export const { useCreateMilestoneMutation, useGetMilestonesQuery, useUpdateMilestoneMutation, useDeleteMilestoneMutation } = milestoneApi;

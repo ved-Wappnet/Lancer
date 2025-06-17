@@ -24,7 +24,11 @@ export async function POST(req: NextRequest) {
       progress,
       status: statusValue,
     });
-    return NextResponse.json(milestone, { status: 201 });
+    return NextResponse.json({
+      success: true,
+      message: "Milestone created successfully",
+      data: milestone
+    }, { status: 201 });
   } catch (error: any) {
     return NextResponse.json({ error: error.message || "Internal Server Error" }, { status: 500 });
   }
@@ -38,7 +42,11 @@ export async function GET() {
       include: [{ model: Project, as: "project" }],
       order: [["dueDate", "ASC"]],
     });
-    return NextResponse.json(milestones);
+    return NextResponse.json({
+      success: true,
+      message: "Milestones fetched successfully",
+      data: milestones
+    });
   } catch (error: any) {
     return NextResponse.json({ error: error.message || "Internal Server Error" }, { status: 500 });
   }
