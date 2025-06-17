@@ -18,8 +18,9 @@ import { useGetProjectsQuery } from "@/services/projectApi";
 import { useCreateMilestoneMutation, useGetMilestonesQuery, useUpdateMilestoneMutation, useDeleteMilestoneMutation } from "@/services/milestoneApi";
 import Loader from "@/components/ui/loader";
 import { toast } from "@/hooks/use-toast";
+import type { Milestone, MilestoneStatus, MilestoneApiResponse, MilestoneCardProps } from "@/types/milestone";
 
-type MilestoneStatus = 'upcoming' | 'in-progress' | 'completed' | 'delayed';
+
 
 // Helper: map status string to enum number
 const statusToNumber = (status: MilestoneStatus): number => {
@@ -43,19 +44,9 @@ const numberToStatus = (num: number): MilestoneStatus => {
   }
 };
 
-interface Milestone {
-  id: string | number;
-  title: string;
-  project?: string | { title: string ,id:number};
-  dueDate: string;
-  progress: number;
-  status: number; // 1-4, matches backend
-  description: string;
-}
 
-interface MilestoneCardProps {
-  milestone: Milestone;
-}
+
+
 
 // Type guard for project with title
 function isProjectWithTitle(project: unknown): project is { title: string } {
@@ -70,11 +61,7 @@ import {
   DropdownMenuSeparator
 } from "@/components/ui/dropdown-menu";
 
-interface MilestoneCardProps {
-  milestone: Milestone;
-  onEdit?: (milestone: Milestone) => void;
-  onDelete?: (milestone: Milestone) => void;
-}
+
 
 function MilestoneCard({ milestone, onEdit, onDelete }: MilestoneCardProps) {
   // Handle both string and object for project

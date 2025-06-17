@@ -1,30 +1,7 @@
-import { ProjectStatus } from '@/models/Project';
-import { createApi, fetchBaseQuery } from '@reduxjs/toolkit/query/react';
 import { baseApi } from './baseApi';
 import { KEEP_UNUSED_DATA_FOR } from '@/data/Constant';
+import type { ProjectPayload, ProjectResponse } from '@/types/project';
 
-export interface ProjectPayload {
-  title: string;
-  description: string;
-  category: number;
-  budget: string;
-  deadline?: string;
-  status: number;
-  skillsRequired?: string[]; // New field
-}
-
-export interface ProjectResponse {
-  id: number;
-  title: string;
-  description: string;
-  category: number;
-  budget: string;
-  deadline?: string | null;
-  status: number;
-  skillsRequired?: string[]; // New field
-  createdAt: string;
-  updatedAt: string;
-}
 
 export const projectApi = baseApi.injectEndpoints({
   endpoints: (builder) => ({
