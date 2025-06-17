@@ -91,4 +91,9 @@ Project.init(
   }
 );
 
+// Add association with Milestone
+import Milestone from "./Milestone";
+Project.hasMany(Milestone, { foreignKey: "projectId", as: "milestones" });
+Milestone.belongsTo(Project, { foreignKey: "projectId", as: "project" });
+
 export default Project;
