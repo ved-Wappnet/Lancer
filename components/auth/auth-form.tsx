@@ -96,7 +96,7 @@ export function AuthForm({ mode, defaultRole }: AuthFormProps) {
       });
       setTimeout(() => {
         router.push("/dashboard");
-      }, 1500);
+      }, 1000);
     } catch (err: any) {
       toast({
         title: "Sign in failed",

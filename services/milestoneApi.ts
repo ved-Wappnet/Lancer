@@ -10,7 +10,7 @@ export const milestoneApi = baseApi.injectEndpoints({
         method: 'POST',
         body,
       }),
-      invalidatesTags: ['projects'],
+      invalidatesTags: ['milestones'],
     }),
     updateMilestone: builder.mutation<{ success: boolean; message: string; data: MilestoneResponse }, { id: number | string; data: Partial<MilestonePayload> }>({
       query: ({ id, data }) => ({
@@ -18,21 +18,21 @@ export const milestoneApi = baseApi.injectEndpoints({
         method: 'PATCH',
         body: data,
       }),
-      invalidatesTags: ['projects'],
+      invalidatesTags: ['milestones'],
     }),
     deleteMilestone: builder.mutation<{ success: boolean; message: string; data: null }, number | string>({
       query: (id) => ({
         url: `/milestones/${id}`,
         method: 'DELETE',
       }),
-      invalidatesTags: ['projects'],
+      invalidatesTags: ['milestones'],
     }),
     getMilestones: builder.query<{ success: boolean; message: string; data: MilestoneResponse[] }, void>({
       query: () => ({
         url: '/milestones',
         method: 'GET',
       }),
-      providesTags: ['projects'],
+      providesTags: ['milestones'],
     }),
   }),
 });

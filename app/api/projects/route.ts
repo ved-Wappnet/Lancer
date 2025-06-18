@@ -17,7 +17,7 @@ export async function GET(req: NextRequest) {
 export async function POST(req: NextRequest) {
   try {
     const body = await req.json();
-    const { title, description, category, budget, deadline, status } = body;
+    const { title, description, category, budget, deadline, status, skillsRequired } = body;
 
     if (!title || !description || category === undefined || !budget || status === undefined) {
       return NextResponse.json({ error: "Missing required fields" }, { status: 400 });
@@ -37,6 +37,7 @@ export async function POST(req: NextRequest) {
       budget,
       deadline: deadline || null,
       status: statusNum as ProjectStatus,
+      skillsRequired: Array.isArray(skillsRequired) ? skillsRequired : [],
     });
 
     return NextResponse.json(project, { status: 201 });
