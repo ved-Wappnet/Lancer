@@ -41,15 +41,28 @@ const categoryLabels: Record<number, string> = {
 };
 
 import { useGetProjectsQuery } from "@/services/projectApi";
-
 import { useState } from "react";
+import { useSelector } from "react-redux";
 import { ProjectModal } from "./project-modal";
 import Loader from "../ui/loader";
+import { BidModal } from "./bid-modal";
 
 export function ProjectList({ categoryFilter, statusFilter }: ProjectListProps) {
   // State for edit modal
   const [editModalOpen, setEditModalOpen] = useState(false);
   const [selectedProject, setSelectedProject] = useState<any | null>(null);
+
+  // --- Bid Modal State ---
+  const [bidModalOpen, setBidModalOpen] = useState(false);
+  const [bidProject, setBidProject] = useState<any | null>(null);
+  // Get user from Redux store
+  const user = useSelector((state: any) => state.auth.user);
+
+  // Handler to open bid modal
+  const handleOpenBidModal = (project: any) => {
+    setBidProject(project);
+    setBidModalOpen(true);
+  };
 
   const { data: projects, isLoading, isFetching } = useGetProjectsQuery();
 
@@ -165,6 +178,12 @@ export function ProjectList({ categoryFilter, statusFilter }: ProjectListProps) 
                       {project.status === 1 && (
                         <DropdownMenuItem>Mark as Completed</DropdownMenuItem>
                       )}
+                      {/* Freelancer: Submit Bid */}
+                      {user?.role === 'freelancer' && (
+                        <DropdownMenuItem onClick={() => handleOpenBidModal(project)}>
+                          Submit Bid
+                        </DropdownMenuItem>
+                      )}
                     </DropdownMenuContent>
                   </DropdownMenu>
                 </div>
@@ -180,6 +199,13 @@ export function ProjectList({ categoryFilter, statusFilter }: ProjectListProps) 
         mode="edit"
         initialData={selectedProject}
       />
+    {/* Bid Modal */}
+    <BidModal
+      open={bidModalOpen}
+      setOpen={setBidModalOpen}
+      project={bidProject}
+      user={user}
+    />
     </>
   );
 }

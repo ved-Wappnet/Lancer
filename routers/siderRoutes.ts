@@ -8,6 +8,7 @@ import {
   PieChart,
   CheckCircle,
   User,
+  Gavel,
 } from "lucide-react";
 
 
@@ -27,7 +28,7 @@ export const navigationItems = [
     {
       title: "Contracts",
       href: "/dashboard/contracts",
-      icon: FileText,
+      icon: Gavel,
       roles: ["client", "freelancer", "admin"],
     },
     {
@@ -35,6 +36,26 @@ export const navigationItems = [
       href: "/dashboard/milestones",
       icon: CheckCircle,
       roles: ["client", "freelancer", "admin"],
+    },
+    // Role-based Bids route
+    // Role-based Bids route
+    {
+      title: "Bids",
+      href: "/dashboard/freelancer/bids",
+      icon: Gavel,
+      roles: ["freelancer"],
+    },
+    {
+      title: "Bids",
+      href: "/dashboard/client/bids",
+      icon: Gavel,
+      roles: ["client"],
+    },
+    {
+      title: "Bids",
+      href: "/dashboard/bids",
+      icon: Gavel,
+      roles: ["admin"],
     },
     {
       title: "Payments",
