@@ -24,6 +24,33 @@ export async function POST(req: NextRequest) {
       progress,
       status: statusValue,
     });
+
+    // --- Begin: Auto-update contract status based on all milestones for the project ---
+    const allMilestones = await Milestone.findAll({ where: { projectId } });
+    const Contract = (await import('@/models/Contract')).default;
+    const Bid = (await import('@/models/Bid')).default;
+    // Find all bids for this project
+    const bids = await Bid.findAll({ where: { projectId } });
+    for (const bid of bids) {
+      const contract = await Contract.findOne({ where: { bidId: bid.id } });
+      if (!contract) continue;
+      let newStatus = contract.status;
+      if (!allMilestones.length) {
+        if (contract.status === 'active') newStatus = 'pending';
+      } else if (allMilestones.some(m => Number(m.status) === 1 || Number(m.status) === 2)) {
+        newStatus = 'pending';
+      } else if (allMilestones.every(m => Number(m.status) === 3)) {
+        newStatus = 'completed';
+      } else if (allMilestones.some(m => Number(m.status) === 4)) {
+        newStatus = 'cancelled';
+      }
+      if (contract.status !== newStatus) {
+        contract.status = newStatus;
+        await contract.save();
+      }
+    }
+    // --- End: Auto-update contract status ---
+
     return NextResponse.json({
       success: true,
       message: "Milestone created successfully",

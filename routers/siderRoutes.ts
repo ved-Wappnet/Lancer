@@ -25,11 +25,24 @@ export const navigationItems = [
       icon: Briefcase,
       roles: ["client", "freelancer", "admin"],
     },
+    // Role-based Contracts route
+    {
+      title: "Contracts",
+      href: "/dashboard/freelancer/contracts",
+      icon: FileText,
+      roles: ["freelancer"],
+    },
+    {
+      title: "Contracts",
+      href: "/dashboard/client/contracts",
+      icon: FileText,
+      roles: ["client"],
+    },
     {
       title: "Contracts",
       href: "/dashboard/contracts",
       icon: Gavel,
-      roles: ["client", "freelancer", "admin"],
+      roles: ["admin"],
     },
     {
       title: "Milestones",
@@ -37,7 +50,6 @@ export const navigationItems = [
       icon: CheckCircle,
       roles: ["client", "freelancer", "admin"],
     },
-    // Role-based Bids route
     // Role-based Bids route
     {
       title: "Bids",

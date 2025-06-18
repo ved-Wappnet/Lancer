@@ -12,6 +12,39 @@ export async function PATCH(req: NextRequest, { params }: { params: { id: string
       return NextResponse.json({ error: "Milestone not found" }, { status: 404 });
     }
     await milestone.update(body);
+
+    // --- Begin: Auto-update contract status based on all milestones for the project ---
+    const projectId = milestone.projectId;
+    const allMilestones = await Milestone.findAll({ where: { projectId } });
+
+    // Import Contract and Bid models
+    const Contract = (await import('@/models/Contract')).default;
+    const Bid = (await import('@/models/Bid')).default;
+
+    // Find all bids for this project
+    const bids = await Bid.findAll({ where: { projectId } });
+    for (const bid of bids) {
+      const contract = await Contract.findOne({ where: { bidId: bid.id } });
+      if (!contract) continue;
+      let newStatus = contract.status;
+      if (!allMilestones.length) {
+        // No milestones: set to 'pending' if contract is accepted/active (mapping 'draft' to 'pending')
+        if (contract.status === 'active') newStatus = 'pending';
+      } else if (allMilestones.some(m => m.status === 1 || m.status === 2)) {
+        newStatus = 'pending';
+      } else if (allMilestones.every(m => m.status === 3)) {
+        newStatus = 'completed';
+      } else if (allMilestones.some(m => m.status === 4)) {
+        newStatus = 'cancelled'; // mapping 'delayed' to 'cancelled' as per allowed enum
+      }
+      // Only update if status actually changes
+      if (contract.status !== newStatus) {
+        contract.status = newStatus;
+        await contract.save();
+      }
+    }
+    // --- End: Auto-update contract status ---
+
     // Optionally, include project info in response
     const updated = await Milestone.findByPk(id, { include: [{ model: Project, as: "project" }] });
     return NextResponse.json({

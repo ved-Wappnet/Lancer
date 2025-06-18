@@ -77,7 +77,9 @@ Bid.init(
 );
 
 import User from './User';
+import Project from './Project';
 
 Bid.belongsTo(User, { foreignKey: 'userId', as: 'user' });
+Bid.belongsTo(Project, { foreignKey: 'projectId', as: 'project' });
 
 export default Bid;

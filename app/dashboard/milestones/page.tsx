@@ -391,7 +391,18 @@ export default function MilestonesPage() {
               <div className="grid grid-cols-2 gap-4">
                 <div className="grid gap-2">
                   <Label htmlFor="milestone-status">Status</Label>
-                  <Select value={milestoneStatus} onValueChange={val => setMilestoneStatus(val as MilestoneStatus)} required>
+                  <Select
+                      value={milestoneStatus}
+                      onValueChange={val => {
+                        setMilestoneStatus(val as MilestoneStatus);
+                        if (val === 'completed') {
+                          setMilestoneProgress(100);
+                        } else if (milestoneProgress === 100) {
+                          setMilestoneProgress(0);
+                        }
+                      }}
+                      required
+                    >
                     <SelectTrigger id="milestone-status">
                       <SelectValue placeholder="Select status" />
                     </SelectTrigger>
@@ -410,9 +421,10 @@ export default function MilestonesPage() {
                     type="number"
                     min={0}
                     max={100}
-                    value={milestoneProgress}
+                    value={milestoneStatus === 'completed' ? 100 : milestoneProgress}
                     onChange={e => setMilestoneProgress(Number(e.target.value))}
                     required
+                    disabled={milestoneStatus === 'completed'}
                   />
                 </div>
               </div>
