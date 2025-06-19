@@ -24,7 +24,7 @@ export function UserWelcome({ name, role, onRoleToggle }: UserWelcomeProps) {
       <div>
         <h2 className="text-3xl font-bold tracking-tight">{greeting}, {name}!</h2>
         <p className="mt-1 text-muted-foreground">
-          Here's what's happening with your {roleTypeMap[role].toLowerCase()} account today.
+          Here's what's happening with your {roleTypeMap[role]?.toLowerCase()} account today.
         </p>
       </div>
       

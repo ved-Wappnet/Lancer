@@ -20,6 +20,12 @@ export function timeAgo(date: string | Date): string {
 /**
  * Format a number or string as USD currency (e.g., $1,234.00)
  */
-export function usdFormat(amount: number | string): string {
-  return `$${Number(amount).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+export function usdFormat(amount: number | string | undefined | null): string {
+  if (amount === undefined || amount === null) return '-';
+  // Always treat as string for cleaning
+  const cleaned = String(amount).replace(/[^0-9.-]+/g, '').trim();
+  console.log('usdFormat input:', JSON.stringify(amount), 'cleaned:', JSON.stringify(cleaned));
+  const num = Number(cleaned);
+  if (isNaN(num)) return '-';
+  return `$${num.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
 }

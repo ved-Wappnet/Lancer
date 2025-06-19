@@ -11,6 +11,52 @@ interface ContractDetailsModalProps {
   role: "client" | "freelancer";
 }
 
+import { stripePromise } from "@/utils/stripeClient";
+
+function MakePaymentButton({ contract }: { contract: any }) {
+  const [loading, setLoading] = React.useState(false);
+  const [error, setError] = React.useState<string | null>(null);
+
+  const handlePayment = async () => {
+    setLoading(true);
+    setError(null);
+    try {
+      const res = await fetch("/api/payments/checkout-session", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          contractId: contract.id,
+          amount: contract.amount,
+          clientEmail: contract.client?.email,
+        }),
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || "Failed to create payment session");
+      const stripe = await stripePromise;
+      if (!stripe) throw new Error("Stripe.js failed to load");
+      await stripe.redirectToCheckout({ sessionId: data.id });
+    } catch (err: any) {
+      setError(err.message || "Payment error");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  return (
+    <div className="flex justify-end mt-4">
+      <button
+        className="bg-primary hover:bg-primary/90 text-white font-semibold px-6 py-2 rounded shadow transition-colors disabled:opacity-60 disabled:cursor-not-allowed"
+        type="button"
+        onClick={handlePayment}
+        disabled={loading}
+      >
+        {loading ? "Redirecting..." : "Make Payment"}
+      </button>
+      {error && <span className="text-red-600 text-xs ml-4">{error}</span>}
+    </div>
+  );
+}
+
 export default function ContractDetailsModal({ open, onOpenChange, contract, role }: ContractDetailsModalProps) {
   if (!contract) return null;
 
@@ -86,6 +132,10 @@ export default function ContractDetailsModal({ open, onOpenChange, contract, rol
               readOnly
             />
           </div>
+          {/* Make Payment Button (only if completed) */}
+          {status === 'completed' && (
+            <MakePaymentButton contract={contract} />
+          )}
         </div>
       </DialogContent>
     </Dialog>

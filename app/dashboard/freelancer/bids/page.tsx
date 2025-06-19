@@ -4,7 +4,6 @@ import React from 'react'
 import { useGetBidsQuery } from '@/services/bidApi';
 import { useGetProjectsQuery } from '@/services/projectApi';
 import type { Bid } from '@/types/bid';
-import { Badge } from '@/components/ui/badge';
 
 const usdFormat = (amount: number | string) => {
   return `$${Number(amount).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
@@ -66,7 +65,7 @@ const FreelancerBidsPage = () => {
                     <td className="py-4 align-top w-1/3">
                       <div className="font-semibold truncate max-w-xs whitespace-nowrap">{project?.title || 'Untitled Project'}</div>
                       <div className="text-xs text-muted-foreground truncate max-w-xs truncate-ellipsis w-64">{project?.description || ''}</div>
-                      <div className="text-xs text-muted-foreground mt-1">Project Budget: {project?.budget ? usdFormat(project.budget) : '-'}</div>
+                      <div className="text-xs text-muted-foreground mt-1">Project Budget: {project?.budget ? "$" + (project.budget) : '-'}</div>
                     </td>
                     <td className="py-4 align-top">
                       <div className="font-semibold">{usdFormat(bid.amount)}</div>
