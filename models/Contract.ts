@@ -46,7 +46,7 @@ Contract.init(
       allowNull: false,
     },
     status: {
-      type: DataTypes.ENUM('pending', 'active', 'completed', 'cancelled'),
+      type: DataTypes.ENUM('pending', 'active', 'completed', 'cancelled', 'payment_success'),
       allowNull: false,
       defaultValue: 'pending',
     },

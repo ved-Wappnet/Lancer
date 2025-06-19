@@ -23,18 +23,37 @@ export async function PATCH(req: NextRequest, { params }: { params: { id: string
 
     // Find all bids for this project
     const bids = await Bid.findAll({ where: { projectId } });
+
+    // Helper to normalize milestone status (handles both string and number)
+    const normalizeStatus = (status: any) => {
+      // Numeric status: 1=upcoming, 2=in-progress, 3=completed, 4=delayed
+      if (typeof status === 'number') {
+        switch (status) {
+          case 1: return 'upcoming';
+          case 2: return 'in-progress';
+          case 3: return 'completed';
+          case 4: return 'delayed';
+          default: return '';
+        }
+      }
+      return status;
+    };
+
     for (const bid of bids) {
       const contract = await Contract.findOne({ where: { bidId: bid.id } });
       if (!contract) continue;
       let newStatus = contract.status;
+
+      const statuses = allMilestones.map(m => normalizeStatus(m.status));
+
       if (!allMilestones.length) {
-        // No milestones: set to 'pending' if contract is accepted/active (mapping 'draft' to 'pending')
+        // No milestones: set to 'pending' if contract is active
         if (contract.status === 'active') newStatus = 'pending';
-      } else if (allMilestones.some(m => m.status === 1 || m.status === 2)) {
+      } else if (statuses.some(s => s === 'upcoming' || s === 'in-progress')) {
         newStatus = 'pending';
-      } else if (allMilestones.every(m => m.status === 3)) {
+      } else if (statuses.every(s => s === 'completed')) {
         newStatus = 'completed';
-      } else if (allMilestones.some(m => m.status === 4)) {
+      } else if (statuses.some(s => s === 'delayed')) {
         newStatus = 'cancelled'; // mapping 'delayed' to 'cancelled' as per allowed enum
       }
       // Only update if status actually changes

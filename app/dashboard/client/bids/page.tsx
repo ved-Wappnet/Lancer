@@ -63,6 +63,7 @@ const ClientBidsPage = () => {
           <div className="space-y-8">
             {bids.map((bid: any) => {
               const project = projectMap.get(Number(bid.projectId));
+
               return (
                 <div key={bid.id} className="border rounded-lg p-6 flex flex-col gap-2 relative bg-card shadow-sm">
                   {/* Project info */}
