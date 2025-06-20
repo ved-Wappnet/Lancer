@@ -9,7 +9,7 @@ import Loader from "@/components/ui/loader";
 import ContractDetailsModal from "@/components/ContractDetailsModal";
 import { useState } from "react";
 
-const getStatusBadge = (status: string) => {
+const getStatusBadge = (status: string): JSX.Element => {
   const statusConfig: Record<string, string> = {
     pending: "bg-yellow-100 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-400",
     active: "bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-400",
@@ -23,7 +23,24 @@ const getStatusBadge = (status: string) => {
         statusConfig[status] || "bg-gray-100 text-gray-800"
       }`}
     >
-      {status.charAt(0).toUpperCase() + status.slice(1)}
+      {status.replace('_', ' ').replace(/\b\w/g, l => l.toUpperCase())}
+    </span>
+  );
+};
+
+const getPaymentStatusBadge = (paymentStatus: string): JSX.Element => {
+  const statusConfig: Record<string, string> = {
+    pending: "bg-yellow-100 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-400",
+    on_hold: "bg-gray-100 text-gray-800 dark:bg-gray-700/30 dark:text-gray-400",
+    completed: "bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400",
+  };
+  return (
+    <span
+      className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
+        statusConfig[paymentStatus] || "bg-gray-100 text-gray-800"
+      }`}
+    >
+      {paymentStatus.replace('_', ' ').replace(/\b\w/g, l => l.toUpperCase())}
     </span>
   );
 };
@@ -59,6 +76,7 @@ const ClientContractsPage = () => {
                   <th className="py-3 px-4 font-medium text-left">Freelancer</th>
                   <th className="py-3 px-4 font-medium text-left">Amount</th>
                   <th className="py-3 px-4 font-medium text-left">Status</th>
+                  <th className="py-3 px-4 font-medium text-left">Payment Status</th>
                   <th className="py-3 px-4 font-medium text-left">Created At</th>
                   <th className="py-3 px-4 font-medium text-left">Updated At</th>
                   <th className="py-3 px-4 font-medium text-left">Actions</th>
@@ -77,6 +95,9 @@ const ClientContractsPage = () => {
                     <td className="py-3 px-4">{contract.freelancer?.name || "-"}</td>
                     <td className="py-3 px-4">{usdFormat(contract.amount)}</td>
                     <td className="py-3 px-4">{getStatusBadge(contract.status)}</td>
+                    <td className="py-3 px-4">
+                      {getPaymentStatusBadge(contract.paymentStatus)}
+                    </td>
                     <td className="py-3 px-4">{contract.createdAt ? new Date(contract.createdAt).toLocaleDateString() : "-"}</td>
                     <td className="py-3 px-4">{contract.updatedAt ? new Date(contract.updatedAt).toLocaleDateString() : "-"}</td>
                     <td className="py-3 px-4">

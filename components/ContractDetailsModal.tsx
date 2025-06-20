@@ -104,6 +104,17 @@ export default function ContractDetailsModal({ open, onOpenChange, contract, rol
                   {status.charAt(0).toUpperCase() + status.slice(1)}
                 </span>
               </div>
+              <div className="flex items-center gap-2 text-xs mb-1">
+                <span>Payment Status:</span>
+                <span className={
+                  contract.paymentStatus === 'pending' ? 'bg-yellow-100 text-yellow-800 px-2 py-0.5 rounded-full' :
+                  contract.paymentStatus === 'on_hold' ? 'bg-gray-100 text-gray-800 px-2 py-0.5 rounded-full' :
+                  contract.paymentStatus === 'completed' ? 'bg-green-100 text-green-800 px-2 py-0.5 rounded-full' :
+                  'bg-gray-100 text-gray-800 px-2 py-0.5 rounded-full'
+                }>
+                  {contract.paymentStatus.charAt(0).toUpperCase() + contract.paymentStatus.slice(1).replace('_', ' ')}
+                </span>
+              </div>
             </div>
           </div>
 
@@ -132,8 +143,8 @@ export default function ContractDetailsModal({ open, onOpenChange, contract, rol
               readOnly
             />
           </div>
-          {/* Make Payment Button (only if completed) */}
-          {status === 'completed' && (
+          {/* Make Payment Button (only if payment is pending) */}
+          {contract.paymentStatus === 'pending' && (
             <MakePaymentButton contract={contract} />
           )}
         </div>

@@ -50,11 +50,14 @@ export async function handleStripeWebhook({
       // Update contract status to 'active' after successful payment
       try {
         const Contract = (await import('@/models/Contract')).default;
+        // Example: If milestone is completed, set status to 'completed' and paymentStatus to 'pending'.
+        // Otherwise, set paymentStatus to 'on_hold'.
+        // For webhook, update only paymentStatus to 'on_hold'. Do not set status to 'payment_success'. Keep contract status as is.
         await Contract.update(
-          { status: 'payment_success' },
+          { paymentStatus: 'completed' },
           { where: { id: Number(contractId) } }
         );
-        console.log(`Contract ${contractId} status updated to payment_success.`);
+        console.log(`Contract ${contractId} paymentStatus updated to completed (payment succeeded).`);
       } catch (err) {
         console.error('Failed to update contract status:', err);
       }
