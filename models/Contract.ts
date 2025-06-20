@@ -10,7 +10,8 @@ class Contract extends Model {
   public freelancerId!: number;
   public terms!: string;
   public amount!: number;
-  public status!: 'pending' | 'active' | 'completed' | 'cancelled';
+  public status!: 'pending' | 'active' | 'completed' | 'cancelled' | 'payment_success';
+  public paymentStatus!: 'pending' | 'on_hold' | 'completed';
   public readonly createdAt!: Date;
   public readonly updatedAt!: Date;
 }
@@ -47,6 +48,11 @@ Contract.init(
     },
     status: {
       type: DataTypes.ENUM('pending', 'active', 'completed', 'cancelled', 'payment_success'),
+      allowNull: false,
+      defaultValue: 'pending',
+    },
+    paymentStatus: {
+      type: DataTypes.ENUM('pending', 'on_hold', 'completed'),
       allowNull: false,
       defaultValue: 'pending',
     },

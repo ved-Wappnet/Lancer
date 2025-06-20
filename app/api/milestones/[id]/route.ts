@@ -43,22 +43,39 @@ export async function PATCH(req: NextRequest, { params }: { params: { id: string
       const contract = await Contract.findOne({ where: { bidId: bid.id } });
       if (!contract) continue;
       let newStatus = contract.status;
+      let newPaymentStatus = contract.paymentStatus;
 
       const statuses = allMilestones.map(m => normalizeStatus(m.status));
 
+      // Update contract status logic (unchanged)
       if (!allMilestones.length) {
-        // No milestones: set to 'pending' if contract is active
         if (contract.status === 'active') newStatus = 'pending';
       } else if (statuses.some(s => s === 'upcoming' || s === 'in-progress')) {
         newStatus = 'pending';
       } else if (statuses.every(s => s === 'completed')) {
         newStatus = 'completed';
       } else if (statuses.some(s => s === 'delayed')) {
-        newStatus = 'cancelled'; // mapping 'delayed' to 'cancelled' as per allowed enum
+        newStatus = 'cancelled';
       }
-      // Only update if status actually changes
+
+      // Update paymentStatus logic:
+      if (statuses.every(s => s === 'completed')) {
+        newPaymentStatus = 'pending'; // All milestones completed, awaiting payment
+      } else {
+        newPaymentStatus = 'on_hold'; // Not all milestones completed
+      }
+
+      // Only update if status or paymentStatus actually changes
+      let changed = false;
       if (contract.status !== newStatus) {
         contract.status = newStatus;
+        changed = true;
+      }
+      if (contract.paymentStatus !== newPaymentStatus) {
+        contract.paymentStatus = newPaymentStatus;
+        changed = true;
+      }
+      if (changed) {
         await contract.save();
       }
     }
